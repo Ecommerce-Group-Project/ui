@@ -12,7 +12,7 @@ export const AuthGate = ({children}:{children:ReactNode})=>{
 
 
     if(isResolving){
-        <div className="app-loading">Loading...</div>
+        return <div className="app-loading">Loading...</div>
     }
 
     return <>{children}</>

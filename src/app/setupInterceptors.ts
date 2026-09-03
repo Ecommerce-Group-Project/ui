@@ -1,22 +1,72 @@
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { axiosClient } from '@/shared/api/axiosClient';
+import { authApi } from '@/features/auth/api/authApi';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import type { AuthErrorBody } from '@/features/auth/types/auth.types';
 
-// A 401 from these is expected, not a session expiry
-const AUTH_ENDPOINTS = ['/api/auth/me', '/api/auth/login', '/api/auth/register'];
+type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
+
+// A 401 from these must never start a refresh.
+// login/register -> wrong credentials, the form shows the error.
+// refresh/logout  -> refreshing these would recurse.
+const NO_REFRESH_ENDPOINTS = [
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/refresh',
+  '/api/auth/logout',
+] as const;
+
+// Shared across callers so N parallel 401s cause exactly ONE refresh.
+// Without this, rotation sees the second call replaying a spent token,
+// flags it as reuse, and revokes every session the user has.
+let refreshPromise: Promise<void> | null = null;
+
+const refreshSession = (): Promise<void> => {
+  refreshPromise ??= authApi
+    .refresh()
+    .then((user) => {
+      useAuthStore.getState().setUser(user);
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+};
 
 export const setupInterceptors = () => {
   axiosClient.interceptors.response.use(
     (response) => response,
-    (error) => {
-      const url = error.config?.url ?? '';
-      const isAuthCall = AUTH_ENDPOINTS.some((path) => url.includes(path));
+    async (error: AxiosError<AuthErrorBody>) => {
+      const config = error.config as RetriableConfig | undefined;
+      const url = config?.url ?? '';
 
-      //If user in login page and got 401 because of wrong password we just show the error
-      if (error.response?.status === 401 && !isAuthCall) {
-        useAuthStore.getState().clearSession();
-
+      if (error.response?.status !== 401 || !config) {
+        return Promise.reject(error);
       }
-      return Promise.reject(error);
+
+      if (NO_REFRESH_ENDPOINTS.some((path) => url.includes(path))) {
+        if (url.includes('/api/auth/refresh')) {
+          useAuthStore.getState().clearSession();
+        }
+        return Promise.reject(error);
+      }
+
+      // The server decides. Only ACCESS_TOKEN_EXPIRED sets refreshable: true.
+      if (!error.response.data?.refreshable || config._retried) {
+        useAuthStore.getState().clearSession();
+        return Promise.reject(error);
+      }
+
+      config._retried = true;
+
+      try {
+        await refreshSession();
+        return await axiosClient(config);
+      } catch (refreshError) {
+        useAuthStore.getState().clearSession();
+        return Promise.reject(refreshError);
+      }
     },
   );
 };

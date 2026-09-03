@@ -27,6 +27,11 @@ export const authApi = {
     return data;
   },
 
+  refresh: async ():Promise<AuthUser> => {
+    const {data} = await axiosClient.post<AuthUser>('/api/auth/refresh');
+    return data;
+  },
+
   logout: async (): Promise<void> => {
     await axiosClient.post('/api/auth/logout');
   },

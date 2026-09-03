@@ -5,9 +5,6 @@ export type AuthUser = {
   roles: string[];
 }
 
-export type AuthResponse = {
-  user: AuthUser;
-}
 
 export type LoginCredentials = {
   email: string;
@@ -19,3 +16,43 @@ export type RegisterData = {
   email: string;
   password: string;
 }
+
+export const AuthErrorCode = {
+  ACCESS_TOKEN_MISSING: 'ACCESS_TOKEN_MISSING',
+  ACCESS_TOKEN_EXPIRED: 'ACCESS_TOKEN_EXPIRED',
+  ACCESS_TOKEN_INVALID: 'ACCESS_TOKEN_INVALID',
+
+  REFRESH_TOKEN_MISSING: 'REFRESH_TOKEN_MISSING',
+  REFRESH_TOKEN_EXPIRED: 'REFRESH_TOKEN_EXPIRED',
+  REFRESH_TOKEN_INVALID: 'REFRESH_TOKEN_INVALID',
+  REFRESH_TOKEN_REUSED: 'REFRESH_TOKEN_REUSED',
+
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+} as const;
+
+
+/**
+ * Below line produce
+ * 
+ * type AuthErrorCode =
+  | "ACCESS_TOKEN_MISSING"
+  | "ACCESS_TOKEN_EXPIRED"
+  | "ACCESS_TOKEN_INVALID"
+  | "REFRESH_TOKEN_MISSING"
+  | "REFRESH_TOKEN_EXPIRED"
+  | "REFRESH_TOKEN_INVALID"
+  | "REFRESH_TOKEN_REUSED"
+  | "UNAUTHENTICATED";
+
+  this type.
+ */
+
+export type AuthErrorCode = typeof AuthErrorCode[keyof typeof AuthErrorCode];
+
+export type AuthErrorBody = {
+  status: number;
+  code: AuthErrorCode;
+  message: string;
+  refreshable: boolean;
+  timestamp: string;
+};

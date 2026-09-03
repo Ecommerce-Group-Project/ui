@@ -28,6 +28,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const user = await authApi.me();
       get().setUser(user);
+
       
     } catch {
       get().clearSession();
