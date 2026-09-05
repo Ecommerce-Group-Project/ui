@@ -56,3 +56,14 @@ export type AuthErrorBody = {
   refreshable: boolean;
   timestamp: string;
 };
+
+export type ForgotPasswordData =  {
+  email:string;
+  
+}
+
+export type ResetPasswordData = {
+  token:string,
+  newPassword:string,
+}
+

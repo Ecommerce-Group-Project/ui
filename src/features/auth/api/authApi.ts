@@ -1,8 +1,10 @@
 import { axiosClient } from '@/shared/api/axiosClient';
 import type {
   AuthUser,
+  ForgotPasswordData,
   LoginCredentials,
   RegisterData,
+  ResetPasswordData,
 } from '../types/auth.types';
 
 export const authApi = {
@@ -34,5 +36,29 @@ export const authApi = {
 
   logout: async (): Promise<void> => {
     await axiosClient.post('/api/auth/logout');
+  },
+
+
+  forgotPassword: async (payload:ForgotPasswordData): Promise<string> => {
+    const {data} = await axiosClient.post<{message:string}>(
+      '/api/auth/forgot-password',
+      payload
+    )
+
+    return data.message;
+  },
+
+  validateResetToken: async(token:string):Promise<void> =>{
+    await axiosClient.get('/api/auth/reset-password/validate',{
+      params:{token},
+    })
+  },
+  
+  resetPassword: async (payload: ResetPasswordData): Promise<string> => {
+    const { data } = await axiosClient.post<{ message: string }>(
+      '/api/auth/reset-password',
+      payload,
+    );
+    return data.message;
   },
 };

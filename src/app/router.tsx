@@ -4,6 +4,8 @@ import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { RegisterPage } from "@/features/auth/pages/RegisterPage";
 import { HomePage } from "@/features/home/pages/HomePage";
 import { UserProfilePage } from "@/features/user/page/UserProfilePage";
+import { ForgotPasswordPage } from "@/features/auth/pages/ForgotPasswordPage"; 
+import { ResetPasswordPage } from "@/features/auth/pages/ResetPassword";
 import { RootLayout } from "./RootLayout";
 
 export const router = createBrowserRouter([
@@ -12,6 +14,8 @@ export const router = createBrowserRouter([
     children: [
       { path: "/login", element: <LoginPage /> },
       { path: "/register", element: <RegisterPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/reset-password', element: <ResetPasswordPage /> },
 
       {
         element: <ProtectedRoute />,

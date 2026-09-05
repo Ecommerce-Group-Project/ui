@@ -23,6 +23,9 @@ export const LoginPage = () => {
       )}
 
       <LoginForm />
+      <p>
+        <Link to="/forgot-password">Forgot your password?</Link>
+      </p>
       <Divider label="OR" />
       <SocialLoginGroup />
 
